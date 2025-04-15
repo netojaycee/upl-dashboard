@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { TeamForm } from "@/components/forms/TeamForm";
 import { Modal } from "@/components/Modal";
 import { Plus, Pencil, Loader2, Circle } from "lucide-react";
-import { SectionCards } from "@/components/sidebar/section-cards";
+// import { SectionCards } from "@/components/sidebar/section-cards";
 import Image from "next/image";
 import { useTeams } from "@/lib/firebaseQueries";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,7 @@ export default function TeamsPage() {
 
   return (
     <div className='container mx-auto '>
-      <SectionCards />
+      {/* <SectionCards /> */}
       <div className='flex w-full justify-between items-center mt-3 gap-4'>
         <Input
           type='text'

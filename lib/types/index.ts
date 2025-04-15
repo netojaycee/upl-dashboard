@@ -28,6 +28,7 @@ export interface Player {
     imageUrl: string | null;
     createdAt: string;
     teamId?: string;
+    teamName?: string;
 }
 
 export interface NewPlayer {
@@ -37,4 +38,6 @@ export interface NewPlayer {
     teamId: string;
     imageUrl: string | null;
     createdAt: string;
+    teamName?: string;
+
 }

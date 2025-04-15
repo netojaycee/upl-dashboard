@@ -1,37 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/Modal";
 import { DeleteModal } from "@/components/DeleteModal";
 import { usePlayers } from "@/lib/firebaseQueries";
-import { Loader2, Pencil } from "lucide-react";
+import { Circle, Eye, Loader2, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { PlayerForm } from "@/components/forms/PlayerForm";
+import { Input } from "@/components/ui/input";
+
+// Fallback image (replace with your own placeholder URL or local asset)
+const FALLBACK_IMAGE = "/images/default-avatar.png"; // Local fallback image
+// Alternatively, use an external URL: "https://via.placeholder.com/80"
 
 export default function PlayersPage() {
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
   const [editPlayerId, setEditPlayerId] = useState<string | null>(null);
-  const { data: players, isLoading, error } = usePlayers();
+  const { data: players = [], isLoading, error } = usePlayers();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
+  // Function to validate imageUrl
+  const isValidImageUrl = (url: string): boolean => {
+    if (typeof url !== "string") {
+      console.warn("Invalid imageUrl: Not a string", url);
+      return false;
+    }
+    // Check if it starts with http:// or https://
+    const isUrl = url.startsWith("http://") || url.startsWith("https://");
+    if (!isUrl) {
+      console.warn("Invalid imageUrl: Does not start with http(s)", url);
+    }
+    return isUrl;
+  };
+
+  const filteredPlayers = players.filter((player) =>
+    player.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className='container mx-auto py-8'>
-      <div className='flex justify-between items-center mb-6'>
-        <h1 className='text-3xl font-bold'>Players</h1>
+      <div className='flex w-full justify-between items-center mb-3 gap-4'>
+        <Input
+          type='text'
+          placeholder='Search teams...'
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className='max-w-sm'
+        />
         <Button onClick={() => setIsAddPlayerModalOpen(true)}>
-          Add Player
+          <Plus className='w-4 h-4' /> Add Player
         </Button>
       </div>
       {isLoading && (
         <div className='flex justify-center'>
-          <Loader2 className='h-8 w-8 animate-spin' />
+          <div className='relative'>
+            <Circle className='h-20 w-20 text-muted-foreground/20 opacity-70 animate-pulse' />
+            <Loader2
+              className='absolute inset-0 m-auto animate-spin h-10 w-10 text-primary'
+              aria-label='Loading'
+            />
+          </div>
         </div>
       )}
       {error && <div className='text-red-500'>Error loading players</div>}
       {!isLoading && !error && players && (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {players.map((player) => (
+          {filteredPlayers.map((player) => (
             <Card key={player.id}>
               <CardHeader>
                 <CardTitle className='text-lg font-semibold'>
@@ -39,20 +79,31 @@ export default function PlayersPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {player.imageUrl && (
+                {player.imageUrl && isValidImageUrl(player.imageUrl) ? (
                   <Image
-                    src={""}
+                    src={player.imageUrl}
                     alt={`${player.name} image`}
                     width={80}
                     height={80}
-                    className='rounded-full mb-4'
+                    className='rounded-full mb-4 w-20 h-20 object-cover'
+                    onError={(e) => {
+                      console.warn(
+                        `Failed to load image for ${player.name}: ${player.imageUrl}`
+                      );
+                      e.currentTarget.src = FALLBACK_IMAGE; // Fallback on error
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={FALLBACK_IMAGE}
+                    alt='Default avatar'
+                    width={100}
+                    height={100}
+                    className='rounded-full mb-4 w-20 h-20 object-contain'
                   />
                 )}
                 <p className='text-sm text-muted-foreground'>
-                  DOB: {new Date(player.dateOfBirth).toLocaleDateString()}
-                </p>
-                <p className='text-sm text-muted-foreground'>
-                  Club ID: {player.teamId}
+                  Team Name: {player.teamName}
                 </p>
                 <p className='text-sm text-muted-foreground'>
                   Phone: {player.phoneNumber || "N/A"}
@@ -62,15 +113,12 @@ export default function PlayersPage() {
                     onClick={() => setEditPlayerId(player.id)}
                     className='text-blue-500 hover:text-blue-700'
                   >
-                    <Pencil className='w-4 h-4' />
+                    <Eye className='w-4 h-4' />
                   </button>
                   <DeleteModal
-                    //   isOpen={isDeleteModalOpen}
-                    // onClose={() => setIsDeleteModalOpen(false)}
                     onClose={() => {}}
                     itemId={player?.id}
                     itemName={player?.name}
-                    // onSuccess={() => setIsDeleteModalOpen(false)}
                     onSuccess={() => {}}
                     type='player'
                   />
