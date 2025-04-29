@@ -36,6 +36,8 @@ export default function MainLayout({
     pathname.replace("/", "").charAt(0).toUpperCase() +
     pathname.replace("/", "").slice(1);
 
+    // console.log(pageTitle);
+
   return (
     <div>
       {" "}

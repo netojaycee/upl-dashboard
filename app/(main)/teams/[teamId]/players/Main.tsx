@@ -4,9 +4,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetTeam, usePlayersByTeam } from "@/lib/firebaseQueries";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { DeleteModal } from "@/components/DeleteModal";
+import { useState } from "react";
+import { PlayerForm } from "@/components/forms/PlayerForm";
+import { Modal } from "@/components/Modal";
 
 export default function TeamDetailsPage({ teamId }: { teamId: string }) {
   const {
@@ -20,6 +24,7 @@ export default function TeamDetailsPage({ teamId }: { teamId: string }) {
     error: playersError,
   } = usePlayersByTeam(teamId);
   const router = useRouter();
+  const [editPlayerId, setEditPlayerId] = useState<string | null>(null);
 
   if (isTeamLoading || isPlayersLoading) {
     return (
@@ -89,11 +94,37 @@ export default function TeamDetailsPage({ teamId }: { teamId: string }) {
                 <Button asChild variant='outline' size='sm' className='mt-4'>
                   <Link href={`/players/${player.id}`}>View Details</Link>
                 </Button>
+                <div className='flex gap-2 mt-4'>
+                  <button
+                    onClick={() => setEditPlayerId(player.id)}
+                    className='text-blue-500 hover:text-blue-700'
+                  >
+                    <Pencil className='w-4 h-4' />
+                  </button>
+                  <DeleteModal
+                    onClose={() => {}}
+                    itemId={player?.id}
+                    itemName={player?.name}
+                    onSuccess={() => {}}
+                    type='player'
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={!!editPlayerId}
+        onClose={() => setEditPlayerId(null)}
+        title='Edit Player'
+      >
+        <PlayerForm
+          playerId={editPlayerId}
+          onSuccess={() => setEditPlayerId(null)}
+        />
+      </Modal>
     </div>
   );
 }

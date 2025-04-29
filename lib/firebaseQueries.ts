@@ -23,6 +23,7 @@ import {
     deleteDoc,
     query,
     where,
+    orderBy,
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -177,7 +178,8 @@ export const useTeams = (): UseQueryResult<Team[], Error> => {
                 db,
                 `teams`
             );
-            const snapshot = await getDocs(collRef);
+            const q = query(collRef, orderBy("name", "asc"));
+            const snapshot = await getDocs(q);
             return snapshot.docs.map(
                 (doc) =>
                 ({
@@ -189,6 +191,9 @@ export const useTeams = (): UseQueryResult<Team[], Error> => {
         enabled: !!user,
     });
 };
+
+
+
 
 export const useDeleteTeam = (): UseMutationResult<void, Error, string, unknown> => {
     const { user } = useAuthStore();
@@ -327,7 +332,7 @@ export const usePlayersByTeam = (teamId: string | null): UseQueryResult<Player[]
         queryFn: async () => {
             if (!teamId) throw new Error("Team ID is required");
             const collRef: CollectionReference<DocumentData> = collection(db, `players`);
-            const q = query(collRef, where("teamId", "==", teamId));
+            const q = query(collRef, where("teamId", "==", teamId), orderBy("name", "asc"));
             const snapshot = await getDocs(q);
             return snapshot.docs.map(
                 (doc) =>
@@ -353,7 +358,11 @@ export const usePlayers = (): UseQueryResult<Player[], Error> => {
                 db,
                 `players`
             );
-            const snapshot = await getDocs(collRef);
+
+            // Create query with orderBy for alphabetical sorting by name
+            const q = query(collRef, orderBy("name", "asc"));
+            const snapshot = await getDocs(q);
+
             return snapshot.docs.map(
                 (doc) =>
                 ({

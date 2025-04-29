@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -41,7 +41,7 @@ const playerSchema = z.object({
     .min(1, "Player name is required")
     .max(50, "Player name must be 50 characters or less"),
   phoneNumber: z.string().optional(),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  dateOfBirth: z.string().optional(),
   teamId: z.string().min(1, "Club is required"),
   image: z
     .any()
@@ -67,11 +67,16 @@ export function PlayerForm({
   const { data: player, isLoading: isPlayerLoading } = useGetPlayer(
     playerId ?? null
   );
+
+  console.log(player, "f");
   const { data: teams, isLoading: isTeamsLoading } = useTeams();
   const addPlayerMutation = useAddPlayer();
   const updatePlayerMutation = useUpdatePlayer();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+
+  console.log(teams, "teams");
+  console.log(player, "player");
 
   const {
     register,
@@ -80,6 +85,7 @@ export function PlayerForm({
     setValue,
     watch,
     reset,
+    control,
   } = useForm<PlayerFormValues>({
     resolver: zodResolver(playerSchema),
     defaultValues: {
@@ -96,13 +102,16 @@ export function PlayerForm({
       reset({
         name: player.name,
         phoneNumber: player.phoneNumber || "",
-        dateOfBirth: player.dateOfBirth,
+        dateOfBirth: player.dateOfBirth || "",
         teamId: player.teamId,
         image: undefined,
       });
       setPreviewUrl(player.imageUrl);
     }
   }, [player, isEditMode, reset]);
+
+
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -122,7 +131,7 @@ export function PlayerForm({
       const playerData = {
         name: data.name,
         phoneNumber: data.phoneNumber || null,
-        dateOfBirth: data.dateOfBirth,
+        dateOfBirth: data.dateOfBirth || "",
         teamId: data.teamId,
         imageUrl: isEditMode ? player?.imageUrl || null : null,
         createdAt: isEditMode
@@ -133,7 +142,7 @@ export function PlayerForm({
 
       if (isEditMode && playerId) {
         updatePlayerMutation.mutate(
-          { id: playerId, ...playerData },
+          { id: playerId, ...playerData, dateOfBirth: data.dateOfBirth || "" },
           {
             onSuccess: () => {
               toast.success("Player Updated", {
@@ -149,21 +158,22 @@ export function PlayerForm({
           }
         );
       } else {
-        addPlayerMutation.mutate(playerData, {
-          onSuccess: () => {
-            toast.success("Player Added", {
-              description: "Your player has been created successfully!",
-            });
-            reset();
-            setPreviewUrl(null);
-            onSuccess?.();
-          },
-          onError: (error) => {
-            toast.error("Error", {
-              description: error.message,
-            });
-          },
-        });
+        console.log(playerData);
+        // addPlayerMutation.mutate(playerData, {
+        //   onSuccess: () => {
+        //     toast.success("Player Added", {
+        //       description: "Your player has been created successfully!",
+        //     });
+        //     reset();
+        //     setPreviewUrl(null);
+        //     onSuccess?.();
+        //   },
+        //   onError: (error) => {
+        //     toast.error("Error", {
+        //       description: error.message,
+        //     });
+        //   },
+        // });
       }
     } catch {
       toast.error("Error", {
@@ -221,7 +231,7 @@ export function PlayerForm({
               >
                 <CalendarIcon className='mr-2 h-4 w-4' />
                 {watch("dateOfBirth") ? (
-                  format(new Date(watch("dateOfBirth")), "PPP")
+                  format(new Date(watch("dateOfBirth") || ""), "PPP")
                 ) : (
                   <span>Pick a date</span>
                 )}
@@ -232,7 +242,7 @@ export function PlayerForm({
                 mode='single'
                 selected={
                   watch("dateOfBirth")
-                    ? new Date(watch("dateOfBirth"))
+                    ? new Date(watch("dateOfBirth") || "")
                     : undefined
                 }
                 onSelect={(date) => {
@@ -252,27 +262,55 @@ export function PlayerForm({
             <p className='text-red-500 text-sm'>{errors.dateOfBirth.message}</p>
           )}
         </div>
-        <div className='grid gap-2'>
+        <div className='grid gap-2 w-full'>
           <Label htmlFor='teamId'>Club</Label>
-          <Select
-            value={watch("teamId")}
-            onValueChange={(value) => setValue("teamId", value)}
-            disabled={isTeamsLoading}
-          >
-            <SelectTrigger id='teamId'>
-              <SelectValue placeholder='Select a club' />
-            </SelectTrigger>
-            <SelectContent>
-              {teams?.map((team) => (
-                <SelectItem key={team.id} value={team.id}>
-                  {team.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.teamId && (
-            <p className='text-red-500 text-sm'>{errors.teamId.message}</p>
-          )}
+          <Controller
+            control={control} // Use control from useForm
+            name='teamId'
+            render={({ field, fieldState: { error } }) => (
+              <div>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  defaultValue=''
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a club' />
+                  </SelectTrigger>
+                  <SelectContent className='w-full'>
+                    {isTeamsLoading ? (
+                      <div className='flex items-center gap-1 text-xs p-2'>
+                        Loading teams
+                        <Loader2 className='animate-spin h-4 w-4' />
+                      </div>
+                    ) : teams && teams.length > 0 ? (
+                      teams.map((team) => (
+                        <SelectItem
+                          className='w-full'
+                          key={team.id}
+                          value={team.id}
+                        >
+                          {team.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className='flex items-center gap-1 text-xs p-2'>
+                        No teams available
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.teamId && (
+                  <p className='text-red-500 text-sm'>
+                    {errors.teamId.message}
+                  </p>
+                )}
+                {error && (
+                  <p className='text-red-500 text-sm mt-1'>{error.message}</p>
+                )}
+              </div>
+            )}
+          />
           {teams?.length === 0 && !isTeamsLoading && (
             <p className='text-yellow-500 text-sm'>No teams available</p>
           )}

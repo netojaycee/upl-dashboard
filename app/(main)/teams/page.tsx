@@ -58,17 +58,19 @@ export default function TeamsPage() {
       <div className='mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
         {teams &&
           filteredTeams.map((team) => (
-            <Link href={`/teams/${team.id}/players`}
+            <div
               key={team.id}
               className='border rounded-lg p-4 flex flex-col items-center'
             >
-              <Image
-                width={200}
-                height={200}
-                src={team.imageUrl ?? "/logotest.jpg"}
-                alt={team.name}
-                className='w-24 h-24 object-cover rounded-full mb-2'
-              />
+              <Link href={`/teams/${team.id}/players`}>
+                <Image
+                  width={200}
+                  height={200}
+                  src={team.imageUrl ?? "/logotest.jpg"}
+                  alt={team.name}
+                  className='w-24 h-24 object-cover rounded-full mb-2'
+                />
+              </Link>
               <div className='flex justify-between items-center w-full'>
                 <span className='text-lg font-medium'>{team.name}</span>
                 <div className='flex gap-2'>
@@ -91,7 +93,7 @@ export default function TeamsPage() {
                   />
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
       </div>
       <Modal

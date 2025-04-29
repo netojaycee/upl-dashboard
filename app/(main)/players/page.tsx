@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/Modal";
 import { DeleteModal } from "@/components/DeleteModal";
 import { usePlayers } from "@/lib/firebaseQueries";
-import { Circle, Eye, Loader2, Plus } from "lucide-react";
+import { Circle, Loader2, Pencil, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { PlayerForm } from "@/components/forms/PlayerForm";
@@ -113,7 +113,7 @@ export default function PlayersPage() {
                     onClick={() => setEditPlayerId(player.id)}
                     className='text-blue-500 hover:text-blue-700'
                   >
-                    <Eye className='w-4 h-4' />
+                    <Pencil className='w-4 h-4' />
                   </button>
                   <DeleteModal
                     onClose={() => {}}
