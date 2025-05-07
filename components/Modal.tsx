@@ -34,13 +34,7 @@ export function Modal({
               </div>
             )}
           </DialogTitle>
-          {/* <DialogDescription>
-            {title && (
-              <div className='mb-4'>
-                <p className='text-sm'>{title}</p>
-              </div>
-            )}
-          </DialogDescription> */}
+        
         </DialogHeader>
         <div>{children}</div>
       </DialogContent>

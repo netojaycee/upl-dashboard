@@ -253,6 +253,47 @@ export const useAddPlayer = (): UseMutationResult<Player, Error, NewPlayer, unkn
     });
 };
 
+// export const useUpdatePlayer = (): UseMutationResult<
+//     Player,
+//     Error,
+//     { id: string } & NewPlayer,
+//     unknown
+// > => {
+//     const { user } = useAuthStore();
+//     const queryClient = useQueryClient();
+//     const storage = getStorage();
+
+//     return useMutation({
+//         mutationFn: async (updatedPlayer: { id: string } & NewPlayer & { imageFile?: File }) => {
+//             if (!user) throw new Error("User not authenticated");
+//             const playerRef = doc(db, `players`, updatedPlayer.id);
+
+//             let imageUrl = updatedPlayer.imageUrl;
+//             if (updatedPlayer.imageFile) {
+//                 const storageRef = ref(storage, `playerImages/${updatedPlayer.id}.jpg`);
+//                 await uploadBytes(storageRef, updatedPlayer.imageFile);
+//                 imageUrl = await getDownloadURL(storageRef);
+//             }
+
+//             const playerData = {
+//                 name: updatedPlayer.name,
+//                 phoneNumber: updatedPlayer.phoneNumber,
+//                 dateOfBirth: updatedPlayer.dateOfBirth,
+//                 teamId: updatedPlayer.teamId,
+//                 imageUrl,
+//                 createdAt: updatedPlayer.createdAt,
+//             };
+
+//             await updateDoc(playerRef, playerData);
+//             return { id: updatedPlayer.id, ...playerData } as Player;
+//         },
+//         onSuccess: () => {
+//             queryClient.invalidateQueries({ queryKey: ["players", user?.uid] });
+//         },
+//     });
+// };
+
+
 export const useUpdatePlayer = (): UseMutationResult<
     Player,
     Error,
@@ -275,11 +316,24 @@ export const useUpdatePlayer = (): UseMutationResult<
                 imageUrl = await getDownloadURL(storageRef);
             }
 
+            // Fetch the team document to get the teamName
+            let teamName = "";
+            if (updatedPlayer.teamId) {
+                const teamRef = doc(db, `teams`, updatedPlayer.teamId);
+                const teamSnap = await getDoc(teamRef);
+                if (teamSnap.exists()) {
+                    teamName = teamSnap.data().name || ""; // Adjust 'name' to match your team document structure
+                } else {
+                    throw new Error("Team not found");
+                }
+            }
+
             const playerData = {
                 name: updatedPlayer.name,
                 phoneNumber: updatedPlayer.phoneNumber,
                 dateOfBirth: updatedPlayer.dateOfBirth,
                 teamId: updatedPlayer.teamId,
+                teamName, // Include teamName in the update
                 imageUrl,
                 createdAt: updatedPlayer.createdAt,
             };
@@ -292,6 +346,7 @@ export const useUpdatePlayer = (): UseMutationResult<
         },
     });
 };
+
 
 export const useGetPlayer = (playerId: string | null): UseQueryResult<Player, Error> => {
     const { user } = useAuthStore();

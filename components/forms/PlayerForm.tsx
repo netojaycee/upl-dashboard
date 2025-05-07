@@ -103,15 +103,12 @@ export function PlayerForm({
         name: player.name,
         phoneNumber: player.phoneNumber || "",
         dateOfBirth: player.dateOfBirth || "",
-        teamId: player.teamId,
+        teamId: player.teamId ? player.teamId.toString() : "",
         image: undefined,
       });
       setPreviewUrl(player.imageUrl);
     }
   }, [player, isEditMode, reset]);
-
-
-
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -159,21 +156,21 @@ export function PlayerForm({
         );
       } else {
         console.log(playerData);
-        // addPlayerMutation.mutate(playerData, {
-        //   onSuccess: () => {
-        //     toast.success("Player Added", {
-        //       description: "Your player has been created successfully!",
-        //     });
-        //     reset();
-        //     setPreviewUrl(null);
-        //     onSuccess?.();
-        //   },
-        //   onError: (error) => {
-        //     toast.error("Error", {
-        //       description: error.message,
-        //     });
-        //   },
-        // });
+        addPlayerMutation.mutate(playerData, {
+          onSuccess: () => {
+            toast.success("Player Added", {
+              description: "Your player has been created successfully!",
+            });
+            reset();
+            setPreviewUrl(null);
+            onSuccess?.();
+          },
+          onError: (error) => {
+            toast.error("Error", {
+              description: error.message,
+            });
+          },
+        });
       }
     } catch {
       toast.error("Error", {
@@ -262,7 +259,7 @@ export function PlayerForm({
             <p className='text-red-500 text-sm'>{errors.dateOfBirth.message}</p>
           )}
         </div>
-        <div className='grid gap-2 w-full'>
+        {/* <div className='grid gap-2 w-full'>
           <Label htmlFor='teamId'>Club</Label>
           <Controller
             control={control} // Use control from useForm
@@ -305,6 +302,55 @@ export function PlayerForm({
                     {errors.teamId.message}
                   </p>
                 )}
+                {error && (
+                  <p className='text-red-500 text-sm mt-1'>{error.message}</p>
+                )}
+              </div>
+            )}
+          />
+          {teams?.length === 0 && !isTeamsLoading && (
+            <p className='text-yellow-500 text-sm'>No teams available</p>
+          )}
+        </div> */}
+        <div className='grid gap-2 w-full'>
+          <Label htmlFor='teamId'>Club</Label>
+          <Controller
+            control={control}
+            name='teamId'
+            render={({ field, fieldState: { error } }) => (
+              <div>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value); // Update form state
+                  }}
+                  value={field.value || ""} // Ensure value is always defined
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a club' />
+                  </SelectTrigger>
+                  <SelectContent className='w-full'>
+                    {isTeamsLoading ? (
+                      <div className='flex items-center gap-1 text-xs p-2'>
+                        Loading teams
+                        <Loader2 className='animate-spin h-4 w-4' />
+                      </div>
+                    ) : teams && teams.length > 0 ? (
+                      teams.map((team) => (
+                        <SelectItem
+                          className='w-full'
+                          key={team.id}
+                          value={team.id.toString()}
+                        >
+                          {team.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className='flex items-center gap-1 text-xs p-2'>
+                        No teams available
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
                 {error && (
                   <p className='text-red-500 text-sm mt-1'>{error.message}</p>
                 )}
